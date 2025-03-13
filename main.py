@@ -86,7 +86,7 @@ async def auto_trigger_callback(context: ContextTypes.DEFAULT_TYPE):
     if chat_id not in GLOBAL_JOBS or 'job' not in GLOBAL_JOBS[chat_id]:
         job = context.job_queue.run_repeating(
             scream_callback,
-            interval=10,
+            interval=60 * 60,
             first=1,
             data=chat_id
         )
@@ -117,7 +117,7 @@ async def group_message_handler(update: Update, context: ContextTypes.DEFAULT_TY
                 print(f"Error while removing pending auto_trigger_job on new message: {e}")
             del GLOBAL_JOBS[chat_id]['auto_trigger_job']
         # 重新安排自动触发任务（例如：60 分钟后触发；测试时可用 10 秒）
-        job = context.job_queue.run_once(auto_trigger_callback, when=10, data={'chat_id': chat_id})
+        job = context.job_queue.run_once(auto_trigger_callback, when=60 * 60, data={'chat_id': chat_id})
         GLOBAL_JOBS.setdefault(chat_id, {})['auto_trigger_job'] = job
 
 async def curfew_start_callback(context: ContextTypes.DEFAULT_TYPE):
