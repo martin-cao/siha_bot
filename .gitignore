@@ -417,3 +417,4 @@ cython_debug/
 
 /bot_data
 /config.yaml
+venv/
