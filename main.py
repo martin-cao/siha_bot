@@ -1,5 +1,5 @@
 import yaml
-from datetime import datetime, time
+from datetime import datetime, time, timezone, timedelta  # 新增 timezone, timedelta
 
 from telegram import Update
 from telegram.ext import (
@@ -253,8 +253,8 @@ async def reset_auto_trigger(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if not chat_info["auto_enabled"]:
         return
 
-    # 如果处于宵禁时段（例：凌晨 0:00 - 8:00），不安排自动触发
-    now = datetime.now()
+    # 使用 UTC+8 时间判断（例如：凌晨 0:00 - 8:00）
+    now = datetime.now(timezone(timedelta(hours=8)))
     if now.hour < 8:
         return
 
@@ -403,10 +403,12 @@ def main():
         MessageHandler(filters.ALL & (filters.ChatType.GROUP | filters.ChatType.SUPERGROUP), group_message_handler)
     )
 
-    # 安排每天的宵禁开始与结束任务（示例：0:00 - 8:00）
+    # 定义 UTC+8 时区对象
+    utc_plus_8 = timezone(timedelta(hours=8))
+    # 安排每天的宵禁开始与结束任务，使用 UTC+8 时间（0:00 - 8:00）
     job_queue = application.job_queue
-    job_queue.run_daily(curfew_start_callback, time=time(hour=0, minute=0, second=0))
-    job_queue.run_daily(curfew_end_callback, time=time(hour=8, minute=0, second=0))
+    job_queue.run_daily(curfew_start_callback, time=time(hour=0, minute=0, second=0, tzinfo=utc_plus_8))
+    job_queue.run_daily(curfew_end_callback, time=time(hour=8, minute=0, second=0, tzinfo=utc_plus_8))
 
     # 启动轮询
     application.run_polling()
